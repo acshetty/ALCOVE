@@ -9,7 +9,9 @@ library(shiny, warn.conflicts = F)
 ### Column 2: Project ID
 ### Column 3: Repository Root
 ### Column 4: Pipeline ID
-oProjects = read.delim("./user_projects/RNASEQ.pipelines.txt", sep="\t", header = TRUE, stringsAsFactor = FALSE)
+#oProjects = read.delim("./user_projects/RNASEQ.pipelines.txt", sep="\t", header = TRUE, stringsAsFactor = FALSE)
+oProjects = read.delim("/local/projects/RNASEQ/pipeline_info.txt", sep="\t", header = FALSE, stringsAsFactor = FALSE)
+#colnames(oProjects)<- c("User.ID", "Project.ID", "Repository.Root", "Pipeline.ID")
 
 ### Setting HTML CSS
 dbCSS = list(
@@ -39,8 +41,10 @@ dbSidebar = dashboardSidebar(
 					uiOutput("Users"),
 					uiOutput("Projects"),
 					uiOutput("Pipelines"),
-					sidebarMenu(
+					
+                    sidebarMenu(
 						menuItem("RNASeq Pipeline", tabName = "rnaseq", icon = icon("th-list")),
+                        menuItem("Upload BDBAG", tabName = "BDBag", icon = icon("cog", lib = "glyphicon")),
 						menuItem("FastQC", tabName = "fastqc", icon = icon("cog", lib = "glyphicon")),
 						menuItem("Alignment", tabName = "alignment", icon = icon("cog", lib = "glyphicon")),
 						menuItem("GeneExpression", tabName = "geneexp", icon = icon("cog", lib = "glyphicon")),
@@ -49,6 +53,19 @@ dbSidebar = dashboardSidebar(
 				)
 
 ### dashboard Body RNASEQ Tab
+#ergatisTab = tabItem(tabName = "ergatis",
+#                    uiOutput("Users"),
+#                    uiOutput("Projects"),
+#                    uiOutput("Pipelines"),
+                    #sidebarMenu(
+                    #    menuItem("RNASeq Pipeline", tabName = "rnaseq", icon = icon("th-list")),
+                    #    menuItem("FastQC", tabName = "fastqc", icon = icon("cog", lib = "glyphicon")),
+                    #    menuItem("Alignment", tabName = "alignment", icon = icon("cog", lib = "glyphicon")),
+                    #    menuItem("GeneExpression", tabName = "geneexp", icon = icon("cog", lib = "glyphicon")),
+                    #    menuItem("Differential Gene Expression", tabName = "diffgeneexp", icon = icon("cog", lib = "glyphicon"))
+                    #)
+#                )
+
 rnaseqTab = tabItem(tabName = "rnaseq",
 						h2("Alcove"),
 						h3("Transcriptomics Pipeline Results Exploration Tool"),
@@ -62,21 +79,37 @@ rnaseqTab = tabItem(tabName = "rnaseq",
 						br(),
 						br(),
 						helpText("Developers:"),
-						helpText("Amol Carl Shetty, Karthik Jallawaram, Ankita Parihar"),
+						helpText("Amol Carl Shetty, Karthik Jallawaram, Ankita Parihar, Apaala Chatterjee"),
 						br(),
 						br(),
 						helpText("Selected Repository:"),
 						verbatimTextOutput("selectuser"),
 						verbatimTextOutput("selectproject"),
 						verbatimTextOutput("selectpipeline"),
-						verbatimTextOutput("repositoryroot")
+						verbatimTextOutput("repositoryroot"),
+						verbatimTextOutput("sampleinfo")
 					)
 
-fastqcTab = tabItem(tabName = "fastqc",
-						helpText("FastQC Directory:"),
-						verbatimTextOutput("fastqcdir"),
-						
-						fluidRow(
+uploadbdbagTab = tabItem(tabName = "BDBag",
+                        textInput("lbdbag", "path/to/sample.zip", ""),
+                        verbatimTextOutput("bdbagPath"),
+                        fileInput("bdbag", "OR upload Zip file (<5mb)", accept = ".zip"),
+                        actionButton("load", "View Uploaded Archive"),
+                        actionButton("unzip", "Unzip Uploaded Archive"),
+                        fileInput("infoF", "Upload Info File"),
+                        tableOutput("filedf"),
+                        tableOutput("zipped"),
+                        verbatimTextOutput("pname"),
+                        verbatimTextOutput("rmode"),
+                        verbatimTextOutput("reporoot")
+            )
+
+fastqcTab =  tabItem(tabName = "fastqc",
+                        helpText("FastQC Directory:"),
+                        verbatimTextOutput("fastqcdir"),
+                        helpText("These graphs were created using the quality control software FastQC ",
+							"(Documentation: https://www.bioinformatics.babraham.ac.uk/projects/ fastqc/)."),	
+                        fluidRow(
 							column(6,uiOutput("sample_select")),
 							column(6,uiOutput("image_select"))
 						),
@@ -87,13 +120,16 @@ fastqcTab = tabItem(tabName = "fastqc",
 						fluidRow(
 						   column(6,downloadButton('downloadPlot1', 'Download Plot1')),
 						   column(6,downloadButton('downloadPlot2', 'Download Plot2'))
-						)
+						),
+						fluidRow(
+                                                                column(12, DT::dataTableOutput("static_table", width = "100%"))
+                                                        )
                     )
 
 alignmentTab = tabItem(tabName = "alignment",
-							helpText("Alignment Summary:"),
+                            helpText("Alignment Summary:"),
 							verbatimTextOutput("alignsummary"),
-							
+						    verbatimTextOutput("summary"),
 							fluidRow(
 								column(12, plotOutput("AlignmentGraph1", width = "100%"))
 							),
@@ -109,9 +145,30 @@ alignmentTab = tabItem(tabName = "alignment",
 							fluidRow(
 								column(6, downloadButton('downloadPlot4', 'Download Plot4'))
 							),
+                            fluidRow(
+                                column(12, plotOutput("AlignInfoGraph1", width = "100%"))
+                            ),
+                            fluidRow(
+                                column(6, downloadButton('downloadPlot5_1', 'Download Plot5'))
+                            ),
 							
 							HTML("<br><br>"),
-							
+							fluidRow(
+                            column(12, plotOutput("AlignInfoGraph2", width = "100%"))
+                            ),
+                            fluidRow(
+                                column(6, downloadButton('downloadPlot7_1', 'Download Plot6'))
+                            ),
+
+							HTML("<br><br>"),
+							fluidRow(
+                                column(12, plotOutput("AlignComboGraph1", width = "100%"))
+                            ),
+                            fluidRow(
+                                column(6, downloadButton('downloadPlot6_1', 'Download Plot7'))
+                            ),
+
+							HTML("<br><br>"),
 							fluidRow(
 								column(12, tags$div(align = 'left', class = 'multicol', uiOutput("column_select")))
 							),
@@ -124,10 +181,20 @@ alignmentTab = tabItem(tabName = "alignment",
 							fluidRow(
 								column(6, downloadButton('downloadTable1', 'Download Table1'))
 							)
+							#fluidRow(
+                                                        #        column(12, DT::dataTableOutput("info_table", width = "100%"))
+                                                        #),
+							#fluidRow(
+                                                         #       column(12, DT::dataTableOutput("info_table1", width = "100%"))
+                                                        #),
+
+							#fluidRow(
+                                                        #        column(12, plotOutput("AlignInfoGraph2", width = "100%"))
+                                                        #)
 						)
 
 geneexpTab = tabItem(tabName = "geneexp",
-							helpText("Gene Expression Set:"),
+                            helpText("Gene Expression Set:"),
 							verbatimTextOutput("expression"),
 							verbatimTextOutput("dimensions"),
 							
@@ -158,11 +225,11 @@ geneexpTab = tabItem(tabName = "geneexp",
 								helpText("Filtered Expression Set:"),
 								verbatimTextOutput("filtered"),
 								
+                                fluidRow(
+                                    column(12, plotOutput("DensityPlotInfo"))
+                                ), 
 								fluidRow(
-									column(12, plotOutput("DensityPlot1"))
-								), 
-								fluidRow(
-									column(6, downloadButton('downloadPlot5', 'Download Plot5'))
+									column(6, downloadButton('downloadPlot5', 'Download Plot8'))
 								),
 								HTML("<br><br>")
 							),
@@ -171,16 +238,15 @@ geneexpTab = tabItem(tabName = "geneexp",
 								column(12, plotOutput("BoxPlot2"))
 							),
 							fluidRow(
-							   column(6, downloadButton('downloadPlot6', 'Download Plot6'))
+							   column(6, downloadButton('downloadPlot6', 'Download Plot9'))
 							),
 							
 							HTML("<br><br>"),
-							
+                            fluidRow(
+                                column(12, plotOutput("PCAPlotInfo"))
+                            ),
 							fluidRow(
-								column(12, plotOutput("PCAPlot3"))
-							),
-							fluidRow(
-							   column(6,downloadButton('downloadPlot7', 'Download Plot7'))
+							   column(6,downloadButton('downloadPlot7', 'Download Plot10'))
 							),
 							
 							HTML("<br><br>"),
@@ -189,12 +255,19 @@ geneexpTab = tabItem(tabName = "geneexp",
 								column(12, DT::dataTableOutput("gene_expression", width = "100%"))
 							),
 							fluidRow(
+                                column(12, DT::dataTableOutput("PCA_Input", width = "100%"))
+                            ),
+							HTML("<br><br>"),
+							fluidRow(
 								column(6, downloadButton('downloadTable2', 'Download Table2'))
-							)
+							),
+                                                       fluidRow(
+                                                                column(12, DT::dataTableOutput("cpm_table", width = "100%"))
+                                                        )
 						)
 
 diffgeneexpTab = tabItem(tabName = "diffgeneexp",
-							helpText("Differential Gene Expression:"),
+                            helpText("Differential Gene Expression:"),
 							verbatimTextOutput("degeneset"),
 							
 							tabsetPanel(
@@ -210,7 +283,8 @@ diffgeneexpTab = tabItem(tabName = "diffgeneexp",
 									verbatimTextOutput("degenesummary"),
 									
 									helpText("Normalized Expression Set:"),
-									verbatimTextOutput("normcount"), 
+									verbatimTextOutput("countf"),
+                                    verbatimTextOutput("normcount"), 
 									
 									helpText("Differential Gene Expression Filters:"),
 									fluidRow(
@@ -235,7 +309,7 @@ diffgeneexpTab = tabItem(tabName = "diffgeneexp",
 										column(12, plotOutput("MAPlot1"))
 									),
 									fluidRow(
-									   column(6, downloadButton('downloadPlot8', 'Download Plot8'))
+									   column(6, downloadButton('downloadPlot8', 'Download Plot11'))
 									), 
 									
 									HTML("<br><br>"),
@@ -244,7 +318,7 @@ diffgeneexpTab = tabItem(tabName = "diffgeneexp",
 										column(12, plotOutput("HeatMap2"))
 									),
 									fluidRow(
-									   column(6, downloadButton('downloadPlot9', 'Download Plot9'))
+									   column(6, downloadButton('downloadPlot9', 'Download Plot12'))
 									), 
 									
 									HTML("<br><br>"),
@@ -272,7 +346,7 @@ diffgeneexpTab = tabItem(tabName = "diffgeneexp",
 										column(12, plotOutput("Venn", height = "600px"))
 									),
 									fluidRow(
-									   column(6, downloadButton('downloadPlot10', 'Download Plot10'))
+									   column(6, downloadButton('downloadPlot10', 'Download Plot13'))
 									), 
 									
 									HTML("<br><br>"),
@@ -287,7 +361,7 @@ diffgeneexpTab = tabItem(tabName = "diffgeneexp",
 										column(12, plotOutput("Quadrant"))
 									),
 									fluidRow(
-									   column(6, downloadButton('downloadPlot11', 'Download Plot11'))
+									   column(6, downloadButton('downloadPlot11', 'Download Plot14'))
 									), 
 									
 									HTML("<br><br>")
@@ -299,6 +373,7 @@ diffgeneexpTab = tabItem(tabName = "diffgeneexp",
 dbBody = dashboardBody(
 					dbCSS,
 					tabItems(
+                        uploadbdbagTab,
 						rnaseqTab,
 						fastqcTab,
 						alignmentTab,
@@ -428,6 +503,11 @@ dashboardPage(dbHeader, dbSidebar, dbBody)
 #                                                 ),
 #                                                 fluidRow(
 #
+#                                                    column(8,textOutput("Heatmap_dim"))),
+#
+#                                                 HTML("<br><br>"),
+#
+#                                                 fluidRow(column(12,plotOutput("geneExpHeatmap1"))),
 #                                                    column(8,textOutput("Heatmap_dim"))),
 #
 #                                                 HTML("<br><br>"),

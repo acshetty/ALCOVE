@@ -26,6 +26,7 @@ output$user_select <- renderMenu({
                selected = "-")
 })
 
+
 user_inp_select <- reactive({input$user_input})
 
 output$project_select <- renderMenu({
@@ -49,3 +50,5 @@ output$project_option_select <- renderUI({selectInput("select", label = h3("Sele
 })
 
 base_path = reactive({normalizePath(file.path(paste0(project_assign$Repository.Root[project_assign$User.ID == user_inp_select() & project_assign$Project.ID == project_input_select() & project_assign$Pipeline.ID == data.select()]), paste0("output_repository")))})
+
+

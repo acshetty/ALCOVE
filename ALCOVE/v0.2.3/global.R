@@ -1,3 +1,9 @@
+###BDBAG Specific###
+
+#bdbagORnot = function(mode){
+#            #return(uiOutput(mode))
+#            if(input$load || input$lload){return(TRUE)} else {return(FALSE)}
+#}
 ### FASTQC TAB ###
 
 listsamples = function(sDir) {
@@ -17,6 +23,36 @@ listsamples = function(sDir) {
 				
 				return(aGroupDirs)
 			  }
+###Get Image types from BdBag
+listImageTypes = function(kDir){
+               aGroupDirs = list.dirs(kDir, full.names = T, recursive = F)
+                aGroupDirs = mixedsort(aGroupDirs)
+                aSampleNames = vector()
+                for (i in 1:length(aGroupDirs)) {
+                    sG = aGroupDirs[i]
+                    sFile=basename(sG)
+                    aSampleNames = c(aSampleNames, sFile)
+                }
+                  names(aGroupDirs) = aSampleNames
+                aGroupDirs = aGroupDirs[mixedorder(aSampleNames)]
+                return(aGroupDirs)
+}
+
+###Get the Sample names from BdBag
+listbdbagSamples = function(kDir) {
+                kDir = gsub("//", "/", kDir)
+                aGroupDirs = list.files(kDir, full.names = T, recursive = F)
+                snames = Sys.glob(paste(kDir, "*_1_1_*.png", sep="/"))
+                name_sample = gsub("_1_.*", "", basename(snames))
+                names(name_sample) = name_sample
+                return(name_sample)
+}
+###Get Image 1 for sample and Image type
+getImages1 = function(imgdir){
+                imgdir = gsub("//", "/", imgdir)
+                img_lst = Sys.glob(paste0(imgdir, "_1_1*"))
+                return(img_lst)
+}
 
 defaultsample = function(sDir) {
 					aGroupDirs = listsamples(sDir)
@@ -61,6 +97,50 @@ create_barplot2 = function(oDF) {
 					return(oP)
 				 }
 
+create_info_barplot1 = function(oDF) {
+					oDF1 = melt(oDF, id.vars = c("Sample.ID", "Condition"))
+					oDF1$variable<-factor(oDF1$variable,levels = rev(levels(oDF1$variable)),ordered = TRUE)
+					levels(oDF1$Condition) <- oDF1$Condition
+					oP = ggplot(oDF1, aes(x = oDF1$Condition, y = oDF1$value, colour = variable, fill = oDF1$variable))+geom_boxplot() 
+					#oP = oP + geom_boxplot(stat = "identity", position = "fill")
+					oP = oP + labs(x = "", y= "Reads")
+					#oP = oP + scale_fill_discrete(name = "")
+					oP = oP + theme_bw()
+                                        oP = oP + theme(axis.text.x = element_text(angle = 45, hjust = 1), axis.title.x = element_blank(), legend.position = "top", legend.title=element_blank())
+					return(oP)
+					
+					}
+
+create_info_barplot2 = function(oDF) {
+					oP = ggplot(data = oDF, aes(x= oDF$Condition, y= oDF$Percent.Mapped.Reads))
+					oP = oP + geom_boxplot( color="darkred")
+					oP = oP + labs(x = "", y= "Percent Mapped Reads")
+					oP = oP + theme(text = element_text(size=10), axis.text.x = element_text(angle=90, hjust=1))
+                    #oP = oP + theme(axis.text.x = element_text(angle = 45, hjust = 1), axis.title.x = element_blank(), legend.position = "top", legend.title=element_blank())
+					return(oP)
+}
+
+create_combo_barplot = function(oDF) {
+					unmapped = subset(oDF, select = c("SampleID", "Total.Mapped", "Unmapped"))
+					colnames(unmapped) = c("SampleID", "Mapped", "Unmapped")
+					unmappedF = melt(unmapped, id ="SampleID")
+					colnames(unmappedF)<-c("SampleID", "variable", "value")
+					oP1 = ggplot() + geom_bar(aes(y = value, x = SampleID, fill = rev(factor(unmappedF$variable))), data = unmappedF, stat="identity")
+					oP1=oP1 + labs(x = "", y= "Reads", fill="", caption="")
+					oP1=oP1 + scale_fill_manual(values=c("#999999", "indianred1", "#56B4E9"),labels=c("Unmapped", "Mapped"))
+					oP1=oP1 + theme(panel.grid = element_blank(), panel.border = element_blank())+ scale_y_continuous(expand = c(0, 0))
+					oP1=oP1 + theme(axis.text.x = element_text(angle = 45, hjust = 1), axis.title.x = element_blank(), legend.position = "bottom", legend.title=element_blank())
+					oP2 = subset(oDF, select = c("SampleID", "Percent.Mapped"))
+					oplot2=ggplot()+geom_line(aes(x= oP2$SampleID, y = oP2$Percent.Mapped, group=1))
+					oplot2= oplot2 + ylab("% Mapped")
+					oplot2= oplot2 + theme(axis.title.x = element_blank(), axis.text=element_text(size=12))
+					oplot2= oplot2 + theme(axis.title.x=element_blank(), axis.text.x=element_blank(), axis.ticks.x=element_blank())
+					oplot2= oplot2 + theme(panel.grid = element_blank())
+					oP = grid.arrange(ggplotGrob(oplot2), ggplotGrob(oP1), heights=c(0.75, 7))
+					
+					return(oP)
+}
+
 ### GENE EXPRESSION TAB ###
 
 readCountFiles = function(aFiles,nColNum=2){
@@ -101,6 +181,16 @@ generate_count_matrix = function(sDir) {
 							return(oCountTable)
 						}
 
+generate_counts_bdbag = function(sDir) {
+                            aFiles = list.files(sDir, full.names = T, recursive = F)
+                            oCountTable = readCountFiles(aFiles,nColNum=2)
+                            idx = grep("no_feature", rownames(oCountTable))
+                            oCountTable = oCountTable[1:(idx-1),]
+                            idx = which((rowSums(oCountTable)/ncol(oCountTable)) >= 1)
+                            oCountTable = oCountTable[idx,]
+                            return(oCountTable)
+                        }
+
 generate_cpm_matrix = function(oCount) {
 						oCPM = (as.matrix(oCount + 1) %*% diag(1/colSums(oCount))) * 1000000
 						oCPM = log10(oCPM)
@@ -137,22 +227,40 @@ plot_density = function(oDF, nCutOff) {
 					return(oP)
 			   }
 
+plot_density_info = function(oDF, nCutOff, iInfo) {
+                                        oMLT = cbind(rownames(oDF), oDF)
+                                        colnames(oMLT) = c("Gene.ID", colnames(oDF))
+                                        oMLT = melt(oMLT, id=c("Gene.ID"))
+                                        colnames(oMLT) = c("Gene.ID", "Sample.ID", "Log10.CPM")
+					oIn = subset(iInfo, select = c("Sample.ID", "Condition"))
+					mOP = merge(oMLT, oIn, by = "Sample.ID")
+                                        oP = ggplot(data = mOP, aes(x = Log10.CPM, group = Sample.ID,color = Condition))
+                                        oP = oP + geom_density(show.legend = FALSE)
+                                        oP = oP + theme_bw()
+                                        oP = oP + theme(legend.key = element_blank())
+                                        oP = oP + geom_vline(xintercept = nCutOff)
+                                        oP = oP + stat_density(aes(x = Log10.CPM, color = Condition), geom = "line", position = "identity")
+                                        return(oP)
+                           }
+
 plot_boxplot = function(oDF) {
 					oMLT = cbind(rownames(oDF), oDF)
 					colnames(oMLT) = c("Gene.ID", colnames(oDF))
 					oMLT = melt(oMLT, id=c("Gene.ID"))
 					colnames(oMLT) = c("Gene.ID", "Sample.ID", "Expression")
-					
-					return(
-						boxplot(Expression ~ Sample.ID,
-							data = oMLT,
-							las = 2,
-							par(mar = c(8, 4, 4, 2) + 0.1),
-							outline = F,
-							col = rainbow(ncol(oDF)),
-							main = "Gene Expression distribution across samples"
-						)
-					)
+				    plt = ggplot(oMLT, aes(x=Sample.ID, y= Expression, color=Sample.ID))+geom_boxplot()
+            	
+#					return(
+#						boxplot(Expression ~ Sample.ID,
+#							data = oMLT,
+#							las = 2,
+#							par(mar = c(8, 4, 4, 2) + 0.1),
+#							outline = F,
+#							col = rainbow(ncol(oDF)),
+#							main = "Gene Expression distribution across samples"
+#						)
+#					)
+                return(plt)
 			   }
 
 plot_pcaplot = function(oDF) {
@@ -170,6 +278,21 @@ plot_pcaplot = function(oDF) {
 					return(oP)
 			   }
 
+plot_pcaplot_info = function(oDF, oIn) {
+					oEXPR = t(as.matrix(oDF))
+        				oPCA = prcomp(oEXPR)
+        				oIn = subset(oIn, select = c("Sample.ID", "Condition"))
+       					rownames(oIn) = oIn$Sample.ID
+        				oIn = subset(oIn, select = c("Condition"))
+        				oPCA = oPCA$x
+        				Group.pc=data.frame(merge(oPCA, oIn, by=0, all=TRUE))
+					oP=ggplot(data=Group.pc, aes(x=PC1, y=PC2, col=Condition))+ geom_point(size=3)
+                                        oP = oP + theme_bw()
+                                        oP = oP + xlab("Principle Component 1")
+                                        oP = oP + ylab("Principle Component 2")
+                                        return(oP)
+                           }
+
 ### DIFFERENTIAL GENE EXPRESSION TAB ###
 
 listcomparisons = function(sDir) {
@@ -180,6 +303,15 @@ listcomparisons = function(sDir) {
 						
 						return(aFiles)
 				  }
+
+listcomparisons_bdbag = function(sDir) {
+                        #aFiles = Sys.glob(paste(sDir,"g*","*.de_genes.txt", sep="/"))
+                        aFiles = list.files(sDir, full.names = T, recursive = F, pattern = ".de_genes.txt")      
+                        names(aFiles) = gsub(".de_genes.txt", "", basename(aFiles))
+                        aFiles = aFiles[mixedorder(names(aFiles))]
+
+                        return(aFiles)
+                  }
 
 defaultcomparison = function(sDir) {
 						aComparisons = listcomparisons(sDir)

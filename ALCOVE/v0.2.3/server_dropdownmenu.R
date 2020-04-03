@@ -9,9 +9,9 @@ library(shiny, warn.conflicts = F)
 ### Column 2: Project ID
 ### Column 3: Repository Root
 ### Column 4: Pipeline ID
-oProjects = read.delim("./user_projects/pipeline_info.txt", sep="\t", header = TRUE, stringsAsFactor = FALSE)
+oProjects = read.delim("/local/projects/RNASEQ/pipeline_info.txt", sep="\t", header = TRUE, stringsAsFactor = FALSE)
 #oProjects = oProjects[1:48,]
-#colnames(oProjects) = c("User.ID","Project.ID","Repository.Root","Pipeline.ID","Sample.Info","Pipeline.Config")
+colnames(oProjects) = c("User.ID","Project.ID","Repository.Root","Pipeline.ID","Sample.Info","Pipeline.Config")
 
 ### Generate 'Users' Drop Down list
 output$Users = renderUI({
@@ -55,4 +55,12 @@ output$selectpipeline = renderText({paste("Pipeline ID :", rPipelineID())})
 
 rRepoRoot = reactive({oProjects$Repository.Root[oProjects$User.ID == rUser() & oProjects$Project.ID == rProject() & oProjects$Pipeline.ID == rPipelineID()]})
 output$repositoryroot = renderText({paste("Repository :", rRepoRoot())})
+
+### Identify path to sample info file and display it
+rInfoFile= reactive({oProjects$Sample.Info[oProjects$User.ID == rUser() & oProjects$Project.ID == rProject() & oProjects$Pipeline.ID == rPipelineID()]})
+output$sampleinfo = renderText({paste("Sample Info File :", rInfoFile())})
+
+### Upload BdBag
+#output$filedf <- renderTable({if(is.null(input$file)){return ()} input$file })
+#observeEvent(input$unzip, output$zipped <- renderTable({unzip(input$file$datapath, list = TRUE, exdir = "/Users/achatterjee/Alcove/")})
 

@@ -17,7 +17,7 @@ source('global.R', local = TRUE)
 function(input, output, session) {
 	source('server_dropdownmenu.R', local = TRUE)
 	
-	# source('server_transcriptomics.R', local = TRUE)
+	source('server_bdbag.R', local = TRUE)
 	
 	source("server_fastqc.R", local = TRUE)
 	
