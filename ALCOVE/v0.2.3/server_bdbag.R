@@ -34,7 +34,8 @@ observeEvent(input$unzip, {
 ### Read Info File
 oInfo = reactive({
     #oDAT = read.delim(rInfofile(), header=F, sep="\t", stringsAsFactor=F)
-    oDAT = read.delim(input$infoF$datapath, header=F, sep="\t", stringsAsFactor=F)
+    #oDAT = read.delim(input$infoF$datapath, header=F, sep="\t", stringsAsFactor=F)
+    parseFilePaths("/home", input$infoF)
     colnames(oDAT)[1] = "Sample.ID"
     colnames(oDAT)[2] = "Condition"
     return(oDAT)
@@ -81,7 +82,14 @@ observeEvent(input$load,{
 observeEvent(input$unzip, {
         ldb<-unzip(bdbag_path(), exdir= unzipPath, unzip="unzip")
 })
-
+oInfo = reactive({
+    #oDAT = read.delim(rInfofile(), header=F, sep="\t", stringsAsFactor=F)
+    #oDAT = read.delim(input$infoF$datapath, header=F, sep="\t", stringsAsFactor=F)
+    parseFilePaths("/home", input$infoF)
+    colnames(oDAT)[1] = "Sample.ID"
+    colnames(oDAT)[2] = "Condition"
+    return(oDAT)
+    })
 #output$pname<-renderText({ if(input$load){ return(tools::file_path_sans_ext(input$bdbag$name))} else {return (tools::file_path_sans_ext(basename(input$lbdbag)))}})
 ##output$pname<-renderText({tools::file_path_sans_ext(input$lbdbag)})
 #prjname<-renderText({if(input$load){ return(tools::file_path_sans_ext(input$bdbag$name))} else {return (tools::file_path_sans_ext(basename(input$lbdbag)))}})
