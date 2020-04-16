@@ -97,6 +97,7 @@ uploadbdbagTab = tabItem(tabName = "BDBag",
                         actionButton("load", "View Uploaded Archive"),
                         actionButton("unzip", "Unzip Uploaded Archive"),
                         fileInput("infoF", "Upload Info File"),
+			tableOutput("infoV")
                         #shinyFileButton("infoF", "Path/To/InfoFile", "InfoFile", F),
 			tableOutput("filedf"),
                         tableOutput("zipped"),
