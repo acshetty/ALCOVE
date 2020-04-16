@@ -34,8 +34,8 @@ observeEvent(input$unzip, {
 ### Read Info File
 oInfo = reactive({
     #oDAT = read.delim(rInfofile(), header=F, sep="\t", stringsAsFactor=F)
-    #oDAT = read.delim(input$infoF$datapath, header=F, sep="\t", stringsAsFactor=F)
-    parseFilePaths("/home", input$infoF)
+    oDAT = read.delim(input$infoF$datapath, header=F, sep="\t", stringsAsFactor=F)
+    #parseFilePaths("/home", input$infoF)
     colnames(oDAT)[1] = "Sample.ID"
     colnames(oDAT)[2] = "Condition"
     return(oDAT)
@@ -84,8 +84,8 @@ observeEvent(input$unzip, {
 })
 oInfo = reactive({
     #oDAT = read.delim(rInfofile(), header=F, sep="\t", stringsAsFactor=F)
-    #oDAT = read.delim(input$infoF$datapath, header=F, sep="\t", stringsAsFactor=F)
-    parseFilePaths("/home", input$infoF)
+    oDAT = read.delim(input$infoF$datapath, header=F, sep="\t", stringsAsFactor=F)
+    #parseFilePaths("/home", input$infoF)
     colnames(oDAT)[1] = "Sample.ID"
     colnames(oDAT)[2] = "Condition"
     return(oDAT)
