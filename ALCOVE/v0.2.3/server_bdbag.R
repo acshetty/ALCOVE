@@ -90,6 +90,15 @@ oInfo = reactive({
     colnames(oDAT)[2] = "Condition"
     return(oDAT)
     })
+
+observeEvent(input$infoF,{
+        output$infoV <- renderTable({
+	read.delim(input$infoF$datapath, header=F, sep="\t", stringsAsFactor=F)
+        #unzip(bdbag_path(), list= T)
+
+})
+})
+
 #output$pname<-renderText({ if(input$load){ return(tools::file_path_sans_ext(input$bdbag$name))} else {return (tools::file_path_sans_ext(basename(input$lbdbag)))}})
 ##output$pname<-renderText({tools::file_path_sans_ext(input$lbdbag)})
 #prjname<-renderText({if(input$load){ return(tools::file_path_sans_ext(input$bdbag$name))} else {return (tools::file_path_sans_ext(basename(input$lbdbag)))}})
