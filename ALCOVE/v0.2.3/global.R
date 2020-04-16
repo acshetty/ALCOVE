@@ -99,7 +99,7 @@ create_barplot2 = function(oDF) {
 
 create_info_barplot1 = function(oDF) {
 					oDF1 = melt(oDF, id.vars = c("Sample.ID", "Condition"))
-					oDF1$variable<-factor(oDF1$variable,levels = rev(unique(levels(oDF1$variable))),ordered = TRUE)
+					oDF1$variable<-factor(oDF1$variable,levels = rev(unique(oDF1$variable)),ordered = TRUE)
 					levels(oDF1$Condition) <- oDF1$Condition
 					oP = ggplot(oDF1, aes(x = oDF1$Condition, y = oDF1$value, colour = variable, fill = oDF1$variable))+geom_boxplot() 
 					#oP = oP + geom_boxplot(stat = "identity", position = "fill")
