@@ -121,3 +121,4 @@ output$rmode <- renderText({ if(input$load){return(TRUE)} else {return(FALSE)}})
 
 observeEvent(input$ubdbag, {
 unzipPath <<- renderText({ input$ubdbag })
+})
