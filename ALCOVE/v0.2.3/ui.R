@@ -104,7 +104,7 @@ uploadbdbagTab = tabItem(tabName = "BDBag",
                         tableOutput("zipped"),
                         verbatimTextOutput("pname"),
                         verbatimTextOutput("rmode"),
-                        verbatimTextOutput("reporoot")
+                        verbatimTextOutput("unzipPath")
             )
 
 fastqcTab =  tabItem(tabName = "fastqc",

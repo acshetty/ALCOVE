@@ -30,7 +30,7 @@ observeEvent(input$load,{
 })
 
 observeEvent(input$unzip, {
-        ldb<-unzip(bdbag_path(), exdir= unzipPath, unzip="unzip")
+        ldb<-unzip(bdbag_path(), exdir= unzipPath(), unzip="unzip")
 })
 
 ### Read Info File
@@ -82,7 +82,7 @@ observeEvent(input$load,{
 })
 
 observeEvent(input$unzip, {
-        ldb<-unzip(bdbag_path(), exdir= unzipPath, unzip="unzip")
+        ldb<-unzip(bdbag_path(), exdir= unzipPath(), unzip="unzip")
 })
 oInfo = reactive({
     #oDAT = read.delim(rInfofile(), header=F, sep="\t", stringsAsFactor=F)
@@ -110,7 +110,7 @@ observeEvent(input$infoF,{
 #prjname<-renderText({ if(input$bdbag){ return(tools::file_path_sans_ext(input$bdbag$name))} else {return (tools::file_path_sans_ext(basename(input$lbdbag)))}})
 output$pname<-renderText({tools::file_path_sans_ext(basename(bdbag_path()))})
 prjname<-renderText({tools::file_path_sans_ext(basename(bdbag_path()))})
-rReporoot<-renderText({ paste0(unzipPath,"/",prjname())})
+rReporoot<-renderText({ paste0(unzipPath(),"/",prjname())})
 output$reporoot <- renderText({ rReporoot() })
 #output$rmode <- renderText({ if(input$load || input$lload){return(TRUE)} else {return(FALSE)}})
 output$rmode <- renderText({ if(input$load){return(TRUE)} else {return(FALSE)}})
