@@ -14,9 +14,11 @@ library(shiny, warn.conflicts = F)
 #colnames(oProjects) = c("User.ID","Project.ID","Repository.Root","Pipeline.ID","Sample.Info","Pipeline.Config")
 
 ### Upload BdBag
-unzipPath <-"/local/scratch/"
+#unzipPath <-'/local/scratch'
+unzipPath <-NULL
 bdbag_path<-NULL
 makeReactiveBinding("bdbag_path")
+makeReactiveBinding("unzipPath")
 
 observeEvent(input$bdbag,{
         bdbag_path <<- renderText({ input$bdbag$datapath })
@@ -114,3 +116,8 @@ output$reporoot <- renderText({ rReporoot() })
 output$rmode <- renderText({ if(input$load){return(TRUE)} else {return(FALSE)}})
 
 #})
+
+####Get outdir for uznipping. Using Volumes
+
+observeEvent(input$ubdbag, {
+unzipPath <<- renderText({ input$ubdbag })
